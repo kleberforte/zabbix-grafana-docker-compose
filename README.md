@@ -11,7 +11,7 @@
 │   ├── grafana
 │   └── zabbix
 │       ├── alertscripts
-|       ├── mibs
+│       ├── mibs
 │       └── snmptraps
 └── docker-compose.yml
 ```
