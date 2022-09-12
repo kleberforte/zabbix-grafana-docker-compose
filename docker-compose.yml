@@ -1,7 +1,7 @@
 version: "3.2"
 
 networks:
-  network-zabbix:
+  zbx_net:
     driver: bridge
     driver_opts:
       com.docker.network.enable_ipv6: "false"
@@ -15,7 +15,7 @@ services:
     container_name: mariadb-zabbix
     image: mariadb:10.8
     networks:
-      - network-zabbix
+      - zbx_net
     restart: unless-stopped
     ports:
       - "3406:3306"
@@ -33,7 +33,7 @@ services:
     container_name: zabbix-server
     image: zabbix/zabbix-server-mysql:ubuntu-6.2-latest
     networks:
-      - network-zabbix
+      - zbx_net
     links:
       - mariadb
     restart: unless-stopped
@@ -42,6 +42,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./data/zabbix/alertscripts:/usr/lib/zabbix/alertscripts:ro
+      - ./data/zabbix/mibs:/var/lib/zabbix/mibs:ro
       - ./data/zabbix/snmptraps:/var/lib/zabbix/snmptraps:rw
     env_file:
       - ./data/env_vars/db.env
@@ -58,7 +59,7 @@ services:
     container_name: zabbix-frontend
     image: zabbix/zabbix-web-apache-mysql:ubuntu-6.2-latest
     networks:
-      - network-zabbix
+      - zbx_net
     links:
       - mariadb
     restart: unless-stopped
@@ -79,7 +80,7 @@ services:
     container_name: grafana
     image: grafana/grafana:9.0.7-ubuntu
     networks:
-      - network-zabbix
+      - zbx_net
     links:
       - mariadb
       - zabbix-server
@@ -99,7 +100,7 @@ services:
     container_name: zabbix-agent
     image: zabbix/zabbix-agent2:alpine-6.2-latest
     networks:
-      - network-zabbix
+      - zbx_net
     links:
       - zabbix-server
     restart: unless-stopped
@@ -115,3 +116,17 @@ services:
     depends_on:
       - zabbix-server
 
+  zabbix-snmptraps:
+    container_name: zabbix-snmptraps
+    image: zabbix/zabbix-snmptraps:ubuntu-6.2-latest
+    networks:
+      - zbx_net
+    restart: unless-stopped
+    ports:
+      - "162:1162/udp"
+    volumes:
+      - ./data/zabbix/snmptraps:/var/lib/zabbix/snmptraps:rw
+    stop_grace_period: 5s
+    labels:
+      com.zabbix.description: "Zabbix snmptraps"
+      com.zabbix.component: "snmptraps"
