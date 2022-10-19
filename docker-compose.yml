@@ -106,10 +106,12 @@ services:
     restart: unless-stopped
     privileged: true
     pid: "host"
+    user: 0:0
     ports:
       - "10050:10050"
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - ZBX_HOSTNAME=zabbix-server
     depends_on:
